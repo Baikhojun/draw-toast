@@ -61,7 +61,9 @@ made by **WhiteJune**
 ## 🛠 실행 방법
 
 ### A. 브라우저로 바로 (GitHub Pages — 추천)
-> 배포된 URL은 저장소 상단의 **About** 섹션을 확인하세요.
+👉 **https://baikhojun.github.io/draw-toast/**
+
+> 첫 배포는 빌드에 1~2분 걸릴 수 있습니다.
 
 ### B. 로컬에서 실행
 폰트 파일을 `fetch()` 하기 때문에 **로컬 HTTP 서버**가 필요합니다 (`file://` 직접 열기는 일부 기능 제한).
