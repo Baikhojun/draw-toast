@@ -21,17 +21,51 @@
     const timerSel = document.getElementById("timer-select");
     let nick = (nickInput.value || "").trim();
     if (!nick) nick = "익명_" + Math.floor(Math.random() * 1000);
-    game.nickname = nick;
+    setNickname(nick);
     game.started = true;
-    document.getElementById("player-name-display").textContent = `👤 ${nick}`;
     document.getElementById("start-screen").classList.add("hidden");
 
     const secs = parseInt(timerSel.value, 10);
     window.Timer.setDuration(secs);
     if (secs > 0) window.Timer.start();
 
-    // 폰트 사전 로드 (PNG 변환 시 첫 클릭 지연 방지)
     if (window.Export && window.Export.loadFonts) window.Export.loadFonts();
+  }
+
+  function setNickname(name) {
+    game.nickname = name;
+    document.getElementById("player-name-display").textContent = `👤 ${name}`;
+  }
+
+  function startNicknameEdit() {
+    if (!game.started) return;
+    const display = document.getElementById("player-name-display");
+    if (!display || display.classList.contains("editing")) return;
+    const input = document.createElement("input");
+    input.type = "text";
+    input.maxLength = 12;
+    input.value = game.nickname;
+    input.className = "player-name-input";
+    let composing = false, cancelled = false;
+    input.addEventListener("compositionstart", () => { composing = true; });
+    input.addEventListener("compositionend", () => { composing = false; });
+    input.addEventListener("keydown", (e) => {
+      if (composing) return;
+      if (e.key === "Enter") { e.preventDefault(); input.blur(); }
+      if (e.key === "Escape") { cancelled = true; input.blur(); }
+    });
+    input.addEventListener("blur", () => {
+      if (!cancelled) {
+        const v = input.value.trim();
+        if (v.length > 0) setNickname(v);
+      }
+      input.remove();
+      display.classList.remove("editing");
+    });
+    display.classList.add("editing");
+    display.parentNode.insertBefore(input, display.nextSibling);
+    input.focus();
+    input.select();
   }
 
   function finishWork() {
@@ -46,8 +80,12 @@
       arrows: state.arrows,
     };
     const entry = window.Gallery.save(snapshot);
-    const msg = `🎉 ${game.nickname}님의 토스트가 갤러리에 저장됐어요! (카드 ${state.cards.length}장 · 연결 ${state.arrows.length}개)`;
-    document.getElementById("finish-message").innerHTML = msg + "<br/><br/>다른 사람의 그림과 비교해보세요!";
+    const msg = `🎉 ${game.nickname}님의 토스트가 갤러리에 저장됐어요!`;
+    document.getElementById("finish-message").innerHTML = msg;
+    if (window.Interpret) {
+      const container = document.getElementById("finish-interpretation");
+      window.Interpret.renderInto(container, snapshot);
+    }
     document.getElementById("finish-modal").classList.remove("hidden");
   }
 
@@ -62,6 +100,20 @@
       if (confirm("캔버스를 모두 비울까요?")) window.Canvas.clearAll();
     });
     document.getElementById("finish-btn").addEventListener("click", finishWork);
+    document.getElementById("help-btn-top").addEventListener("click", openHelp);
+    document.getElementById("player-name-display").addEventListener("click", startNicknameEdit);
+  }
+
+  function openHelp() {
+    document.getElementById("help-modal").classList.remove("hidden");
+  }
+  function closeHelp() {
+    document.getElementById("help-modal").classList.add("hidden");
+  }
+  function bindHelpModal() {
+    document.getElementById("help-btn-start").addEventListener("click", openHelp);
+    document.getElementById("help-close").addEventListener("click", closeHelp);
+    document.getElementById("help-close-2").addEventListener("click", closeHelp);
   }
 
   function bindFinishModal() {
@@ -103,6 +155,7 @@
     bindHeader();
     bindFinishModal();
     bindSidebar();
+    bindHelpModal();
   }
 
   window.Game = {
